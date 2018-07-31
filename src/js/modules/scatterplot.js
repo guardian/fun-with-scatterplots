@@ -49,6 +49,14 @@ export class Scatterplot {
 
 		this.settings = data.sheets.settings
 
+		console.log(this.settings)
+
+		if (this.settings[0]["title"]!='') {
+
+			d3.select(".chartTitle").html(self.settings[0]["title"]);
+
+		}
+
 		if (this.settings[0].trendline=='TRUE') {
 
 			this.trendline = true;
