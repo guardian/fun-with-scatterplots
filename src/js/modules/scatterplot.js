@@ -4,7 +4,7 @@ import Handlebars from "handlebars";
 
 export class Scatterplot {
 
-	constructor(data, xTag, yTag) {
+	constructor(data) {
 
 		var self = this
 
@@ -30,26 +30,43 @@ export class Scatterplot {
 
 		this.cats =  null
 
+		this.x_axis_cross_y =  null
+
+		this.y_axis_cross_x =  null
+
 		this.colours = ["#197caa", "#4bc6df", "#7d0068", "#dc2a7d", "#b51800", "#4e0375", "#e6711b", "#72af7e", "#298422"]
 
 		this.categories =  null
+		
+		this.label_col = null
 
+		var labels = []
+		
 		// Assign
 
-		this.xTag =  xTag
-
-		this.yTag =  yTag
+		this.settings = data.sheets.settings
+		
+		this.yTag = data.sheets.settings[0].y;
+		this.xTag = data.sheets.settings[0].x;
 
 		this.database = data.sheets.database;
 
-		this.database.forEach(function(d,i){
-			d.x = +d[xTag];
-			d.y = +d[yTag];
+		this.database.forEach(function(d,i) {
+			d.x = +d[data.sheets.settings[0].x];
+			d.y = +d[data.sheets.settings[0].y];
+			
+			if ('label' in d) {
+				if (d.label === 'TRUE') {
+					labels.push(d)
+				}
+			}
 		});
 
-		this.settings = data.sheets.settings
+		this.labels = labels
 
 		console.log(this.settings)
+		console.log(this.database)
+		console.log(this.labels)
 
 		if (this.settings[0]["title"]!='') {
 
@@ -60,7 +77,6 @@ export class Scatterplot {
 		if (this.settings[0].trendline=='TRUE') {
 
 			this.trendline = true;
-
 			this.trendlines = data.sheets.trendline;
 
 		}
@@ -81,9 +97,19 @@ export class Scatterplot {
 
 		// Create the category selectors if they have been set in the Googledoc
 		if (this.settings[0].categories!='') {
-
 			this.createCats()
+		}
 
+		if (this.settings[0].x_axis_cross_y != '') {
+			this.x_axis_cross_y = this.settings[0].x_axis_cross_y
+		}
+
+		if (this.settings[0].y_axis_cross_x != '') {
+			this.y_axis_cross_x = this.settings[0].y_axis_cross_x
+		}
+
+		if (this.settings[0]["label"]!='') {
+			this.label_col = this.settings[0].label_col
 		}
 
 		d3.select("#scatterplot_chart_data_source").html(self.settings[0].source);
@@ -195,13 +221,13 @@ export class Scatterplot {
 	    d3.select("#graphicContainer svg").remove();
 
 		// setup x 
-		var xValue = function(d) { return d[self.xTag];}, // data -> value
+		var xValue = function(d) { return d.x;}, // data -> value
 		    x = d3.scaleLinear().range([0, width]), // value -> display
 		    xMap = function(d) { return x(xValue(d));}, // data -> display
 		    xAxis = d3.axisBottom(x) //d3.svg.axis().scale(x).orient("bottom");
 
 		// setup y
-		var yValue = function(d) { return d[self.yTag];}, // data -> value
+		var yValue = function(d) { return d.y;}, // data -> value
 		    y = d3.scaleLinear().range([height, 0]), // value -> display
 		    yMap = function(d) { return y(yValue(d));}, // data -> display
 		    yAxis = d3.axisLeft(y); //d3.svg.axis().scale(y).orient("left");
@@ -213,7 +239,7 @@ export class Scatterplot {
 			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 		// Get the values for the X Axis using all the values from the database (This means you can flip between categories and compare values on the same axis)
-		var xRange = self.database.map(function (d) { return parseFloat(d[self.xTag]); });
+		var xRange = self.database.map(function (d) { return parseFloat(d.x); });
 		
 		// Set the X axis min value
 		var xMin = d3.min(xRange);
@@ -222,26 +248,21 @@ export class Scatterplot {
 		var xMax = d3.max(xRange);
 
 		// Get the full range
-		var yRange = self.database.map(function (d) { return parseFloat(d[self.yTag]); });
+		var yRange = self.database.map(function (d) { return parseFloat(d.y); });
 
 		// Add a 5% buffer on either side of the X axis min max values
 		var xLabels = self.bufferize(xMin,xMax);
 		
 		// Set the Y axis min value
-		var yMin = Math.round(d3.min(self.database, function(d) { return parseFloat(d[self.yTag])}));
-
-		if (yMin < 5) {
-			yMin = 0
-		}
+		var yMin = Math.round(d3.min(self.database, function(d) { return parseFloat(d.y)}));
 
 		// Set the Y axis max value
-		var yMax = Math.round(d3.max(self.database, function(d) { return parseFloat(d[self.yTag])}));
+		var yMax = Math.round(d3.max(self.database, function(d) { return parseFloat(d.y)}));
 
 		// Add a 5% buffer on either side of the Y axis min max values
 		var yLabels = self.bufferize(yMin,yMax);
 
 		x.domain(xLabels);
-
 		y.domain(yLabels);
 
 		var tooltip = d3.select("body").append("div")
@@ -253,14 +274,23 @@ export class Scatterplot {
 		// x-axis
 		svg.append("g")
 			.attr("class", "x axis")
-			.attr("transform", "translate(0," + height + ")")
+			.attr("transform", function() {				
+				
+				if (self.x_axis_cross_y != null) {
+					return "translate(0," + y(self.x_axis_cross_y) + ")"
+				}
+
+				else {
+					return "translate(0," + height + ")"	
+				}
+			})
 			.call(xAxis)
 			.append("text")
 			.attr("class", "label")
 			.attr("x", width)
-			.attr("y", 35)
+			.attr("y", -6)
 			.style("text-anchor", "end")
-			.text("Percentage of electorate who voted yes");
+			.text(self.xTag);
 
 		// y-axis
 		svg.append("g")
@@ -269,10 +299,10 @@ export class Scatterplot {
 			.append("text")
 			.attr("class", "label")
 			.attr("transform", "rotate(-90)")
-			.attr("y", -50)
+			.attr("y", 6)
 			.attr("dy", ".71em")
 			.style("text-anchor", "end")
-			//.text(self.labelizer(self.yTag));
+			.text(self.yTag);
 
 		// draw dots
 		svg.selectAll(".dot")
@@ -283,6 +313,18 @@ export class Scatterplot {
 			.attr("cx", xMap)
 			.attr("cy", yMap)
 			.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colorize(d.state)})
+			.attr("stroke", function(d) { 
+				if (d.label != '') {
+					return "#000" 
+				}
+				
+			})
+			.attr("stroke-width", function(d) { 
+				if (d.label != '') {
+					return "1px"
+				}
+				
+			})
 			.on("mouseover", function(d) {
 
 				if (self.tiptext!=null) {
@@ -309,6 +351,14 @@ export class Scatterplot {
 			.delay(250)
 			.style("display", function(d) { return (self.cats==null) ? 1 : self.opacitize(d.state)})
 
+		svg.selectAll(".dot-label")
+			.data(self.labels)
+			.enter().append("text")
+			.attr("class", "dot-label")
+			.attr("x", xMap)
+			.attr("dx", 5)
+			.attr("y", yMap)
+			.text(function (d) { return d[self.label_col]})
 
 		    if (self.filter!=null) {
 				// Handle the filter clicks
@@ -362,14 +412,14 @@ export class Scatterplot {
 
 		    } else {
 
-		    	var lg = self.calcLinear(self.database, "x", "y", d3.min(self.database, function(d){ return d.x}), d3.min(self.database, function(d){ return d.x}));
+		    	// var lg = self.calcLinear(self.database, "x", "y", d3.min(self.database, function(d){ return d.x}), d3.min(self.database, function(d){ return d.x}));
 
-			    svg.append("line")
-			        .attr("class", "regression")
-			        .attr("x1", x(lg.ptA.x))
-			        .attr("y1", y(lg.ptA.y))
-			        .attr("x2", x(lg.ptB.x))
-			        .attr("y2", y(lg.ptB.y));
+			    // svg.append("line")
+			    //     .attr("class", "regression")
+			    //     .attr("x1", x(lg.ptA.x))
+			    //     .attr("y1", y(lg.ptA.y))
+			    //     .attr("x2", x(lg.ptB.x))
+			    //     .attr("y2", y(lg.ptB.y));
 
 
 		    }

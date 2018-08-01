@@ -26,16 +26,16 @@ window.init = function init(el, config) {
 
     var ssKey = (params.key) ? params.key : '1fF-BncFYQd261yn2GI_nBAaYFvWUt7-Jow6ZwgjCS3g' ;
 
-    var x = (params.x) ? params.x : 'yes' ;
+    // var x = (params.x) ? params.x : 'yes' ;
 
-    var y = (params.y) ? params.y : 'religious_persons_percent' ;
+    // var y = (params.y) ? params.y : 'religious_persons_percent' ;
 
 	reqwest({
 	  url: 'https://interactive.guim.co.uk/docsdata-test/' + ssKey + '.json', //https://interactive.guim.co.uk/docsdata/1uQioCaW7on919nLfs7T7Fpiy3tygPmwHfO5Y-H42zxU.json
 	  type: 'json',
 	  crossOrigin: true,
 	  success: (resp) =>  { 
-        var sp = new Scatterplot(resp, x, y)
+        var sp = new Scatterplot(resp)
 	  }
 	});
 };

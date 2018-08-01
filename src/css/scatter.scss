@@ -32,7 +32,7 @@ html {
 #outer-wrapper {
 
   background-color: white;
-  
+
   a {
     color:#005689;
     text-decoration: none !important;
@@ -94,12 +94,16 @@ html {
   }
 
 
-  .chartSans {
-    font-size:0.8rem;
+  .chartSans, .axis text, .label {
+    font-size:12px;
     line-height:1em;
     color:#767676;
     fill:#767676;
     font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
+  }
+
+  .dot-label {
+    fill:#000;
   }
 
   .subTitle {
@@ -227,21 +231,6 @@ html {
     color:#000;
   }
 
-  #outer-wrapper {
-    position: relative;
-  }
-
-  #outer-wrapper.immersive {
-    max-width:1300px;
-  }
-
-  #outer-wrapper.inline {
-    max-width:620px;
-  }
-
-  #outer-wrapper.showcase {
-    max-width:620px;
-  }
 
 
   .axis path,
@@ -313,5 +302,21 @@ html {
     font-size: 0.9rem;
   }
 
-
 }
+
+  #outer-wrapper {
+    position: relative;
+  }
+
+  #outer-wrapper.immersive {
+    max-width:1300px;
+  }
+
+  #outer-wrapper.inline {
+    max-width:620px;
+  }
+
+  #outer-wrapper.showcase {
+    max-width:620px;
+  }
+
