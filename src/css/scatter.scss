@@ -102,8 +102,21 @@ html {
     font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
   }
 
+
+  @media (max-width: 450px) {
+   .chartSans, .axis text, .label {
+      font-size:8px;
+    }
+
+    .dot-label {
+    display: none;
+    }
+
+}
+
   .dot-label {
-    fill:#000;
+    fill:#767676;
+    font-size:10px;
   }
 
   .subTitle {
@@ -236,7 +249,7 @@ html {
   .axis path,
   .axis line {
     fill: none;
-    stroke: #000;
+    stroke: #767676;
     shape-rendering: crispEdges;
   }
 
@@ -249,8 +262,6 @@ html {
     stroke: steelblue;
     stroke-dasharray: 10,5;
   }
-
-
 
   .keyText {
     font-size:0.8rem;

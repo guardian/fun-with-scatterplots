@@ -30,9 +30,17 @@ export class Scatterplot {
 
 		this.cats =  null
 
+		this.x_format = null
+
+		this.categories = null
+
 		this.x_axis_cross_y =  null
 
 		this.y_axis_cross_x =  null
+
+		this.x_label = null
+
+		this.y_label = null
 
 		this.colours = ["#197caa", "#4bc6df", "#7d0068", "#dc2a7d", "#b51800", "#4e0375", "#e6711b", "#72af7e", "#298422"]
 
@@ -45,6 +53,8 @@ export class Scatterplot {
 		// Assign
 
 		this.settings = data.sheets.settings
+
+		this.key = null
 		
 		this.yTag = data.sheets.settings[0].y;
 		this.xTag = data.sheets.settings[0].x;
@@ -69,9 +79,40 @@ export class Scatterplot {
 		console.log(this.labels)
 
 		if (this.settings[0]["title"]!='') {
-
 			d3.select(".chartTitle").html(self.settings[0]["title"]);
+		}
 
+		this.colourKey = d3.scaleOrdinal();
+
+		if ("key" in data.sheets) {
+			this.key = data.sheets.key
+
+			if (data.sheets.key[0] != '') {
+				var colourDomain = []
+				var colourRange = []
+
+				data.sheets.key.forEach(function(d) {
+					colourDomain.push(d.key)
+					colourRange.push(d.colour)
+				})
+
+				this.colourKey
+					.domain(colourDomain)
+	    			.range(colourRange)
+			}
+	
+		}
+
+		if (this.settings[0].categories!='') {
+			this.createCats()
+		}
+
+		if (this.settings[0]["standfirst"]!='') {
+			d3.select('#standfirst').html(self.settings[0].standfirst);
+		}
+
+		if (this.settings[0]["x_format"]!='') {
+			this.x_format = this.settings[0]["x_format"]
 		}
 
 		if (this.settings[0].trendline=='TRUE') {
@@ -96,9 +137,8 @@ export class Scatterplot {
 		}
 
 		// Create the category selectors if they have been set in the Googledoc
-		if (this.settings[0].categories!='') {
-			this.createCats()
-		}
+		
+
 
 		if (this.settings[0].x_axis_cross_y != '') {
 			this.x_axis_cross_y = this.settings[0].x_axis_cross_y
@@ -111,6 +151,23 @@ export class Scatterplot {
 		if (this.settings[0]["label"]!='') {
 			this.label_col = this.settings[0].label_col
 		}
+
+		if (this.settings[0]["x_label"]!='') {
+			this.x_label = this.settings[0].x_label
+		}
+
+		else {
+			this.x_label = data.sheets.settings[0].x
+		}
+
+		if (this.settings[0]["y_label"]!='') {
+			this.y_label = this.settings[0].y_label
+		}
+
+		else {
+			this.y_label = data.sheets.settings[0].y
+		}
+
 
 		d3.select("#scatterplot_chart_data_source").html(self.settings[0].source);
 
@@ -158,30 +215,51 @@ export class Scatterplot {
 		self.categories = [];
 
 		var categories = [];
+		var colourDomain = []
+		var colourRange = []
+
 
 		self.database.forEach(function(item) {
-
 			categories.indexOf(item[self.cats]) === -1 ? categories.push(item[self.cats]) : '';
-
 		})
 
 		var html = '';
 		
-		for (var i = 0; i < categories.length; i++) {
+		if ("key" in this) {
 
-			// Create the catgories array
-			var obj = {};
-			obj["name"] = categories[i];
-			obj["status"] =  true;
-			obj["colour"] = self.colours[i]
-			self.categories.push(obj);
+			console.log(this.key)
 
-			// Create the categories legend
-			html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keyCircle" style="background: ' + self.colours[i] + '"></span>';
-			html += ' <span class="keyText">' + categories[i] + '</span></div>';
+			if (this.key[0].key != '') {
+				
+				this.key.forEach(function(d) {
+					html += '<div class="keyDiv"><span data-cat="' + d.key + '" class="keyCircle" style="background: ' + d.colour + '"></span>';
+					html += ' <span class="keyText">' + d.key  + '</span></div>';
+				})
 
+			}
+	
 		}
 
+		else {
+
+			for (var i = 0; i < categories.length; i++) {
+
+
+				colorDomain.push(categories[i])
+				colourRange.push(self.colours[i])
+				
+				html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keyCircle" style="background: ' + self.colours[i] + '"></span>';
+				html += ' <span class="keyText">' + categories[i] + '</span></div>';
+
+			}
+		
+			this.colourKey
+				.domain(colourDomain)
+    			.range(colourRange)
+		}
+
+		
+		console.log("self categories", this.colourKey.domain())
 		d3.select('#key').html(html);
 
 	}
@@ -205,7 +283,7 @@ export class Scatterplot {
 		var width = document.querySelector("#graphicContainer").getBoundingClientRect().width;
 		var height = (isMobile) ? width*0.7 : width*0.5;		
 
-		var margin = {top: 20, right: 20, bottom: 35, left: 50},
+		var margin = {top: 20, right: 20, bottom: 35, left: 30},
 		width = width - margin.left - margin.right,
 	    height = height - margin.top - margin.bottom;
 
@@ -226,6 +304,11 @@ export class Scatterplot {
 		    xMap = function(d) { return x(xValue(d));}, // data -> display
 		    xAxis = d3.axisBottom(x) //d3.svg.axis().scale(x).orient("bottom");
 
+		if (self.x_format) {
+			xAxis.tickFormat(d3.format(self.x_format));
+		}
+		
+		    
 		// setup y
 		var yValue = function(d) { return d.y;}, // data -> value
 		    y = d3.scaleLinear().range([height, 0]), // value -> display
@@ -254,14 +337,15 @@ export class Scatterplot {
 		var xLabels = self.bufferize(xMin,xMax);
 		
 		// Set the Y axis min value
-		var yMin = Math.round(d3.min(self.database, function(d) { return parseFloat(d.y)}));
+		var yMin = d3.min(self.database, function(d) { return parseFloat(d.y)})
 
 		// Set the Y axis max value
-		var yMax = Math.round(d3.max(self.database, function(d) { return parseFloat(d.y)}));
-
+		var yMax = d3.max(self.database, function(d) { return parseFloat(d.y)})
+		console.log(yMin, yMax)
 		// Add a 5% buffer on either side of the Y axis min max values
 		var yLabels = self.bufferize(yMin,yMax);
 
+		console.log("xLabels",xLabels)
 		x.domain(xLabels);
 		y.domain(yLabels);
 
@@ -290,7 +374,7 @@ export class Scatterplot {
 			.attr("x", width)
 			.attr("y", -6)
 			.style("text-anchor", "end")
-			.text(self.xTag);
+			.text(self.x_label);
 
 		// y-axis
 		svg.append("g")
@@ -302,21 +386,34 @@ export class Scatterplot {
 			.attr("y", 6)
 			.attr("dy", ".71em")
 			.style("text-anchor", "end")
-			.text(self.yTag);
+			.text(self.y_label);
 
 		// draw dots
+
+
+			svg.selectAll(".dot-label")
+			.data(self.labels)
+			.enter().append("text")
+			.attr("class", "dot-label")
+			.attr("x", xMap)
+			.attr("dy", 15)
+			.attr("text-anchor", "middle")
+			.attr("y", yMap)
+			.text(function (d) { return d[self.label_col]})
+
+
 		svg.selectAll(".dot")
 		  	.data(self.target)
 			.enter().append("circle")
-			.attr("class", function(d) { return "dot " + d.state})
+			.attr("class", function(d) { return "dot " + d[self.cats]})
 			.attr("r", 3.5)
 			.attr("cx", xMap)
 			.attr("cy", yMap)
-			.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colorize(d.state)})
+			.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
 			.attr("stroke", function(d) { 
-				if (d.label != '') {
-					return "#000" 
-				}
+				// if (d.label != '') {
+				// 	return "#000" 
+				// }
 				
 			})
 			.attr("stroke-width", function(d) { 
@@ -347,18 +444,9 @@ export class Scatterplot {
 				}
 
 			})
-			.transition()
-			.delay(250)
-			.style("display", function(d) { return (self.cats==null) ? 1 : self.opacitize(d.state)})
 
-		svg.selectAll(".dot-label")
-			.data(self.labels)
-			.enter().append("text")
-			.attr("class", "dot-label")
-			.attr("x", xMap)
-			.attr("dx", 5)
-			.attr("y", yMap)
-			.text(function (d) { return d[self.label_col]})
+
+	
 
 		    if (self.filter!=null) {
 				// Handle the filter clicks
@@ -585,6 +673,7 @@ export class Scatterplot {
 	}
 
 	colorize(state) {
+		var self = this
 
 		var target = self.categories.filter(function(value){
 			return value.name == state
@@ -594,15 +683,17 @@ export class Scatterplot {
 	
 	}
 
-	opacitize(state) {
+	// opacitize(state) {
 
-		var target = self.categories.filter(function(value){
-			return value.name == state
-		})
+	// 	var self = this
 
-		return (target[0].status) ? 'block' : 'none'
+	// 	var target = self.categories.filter(function(value){
+	// 		return value.name == state
+	// 	})
 
-	}
+	// 	return (target[0].status) ? 'block' : 'none'
+
+	// }
 
 
 }
