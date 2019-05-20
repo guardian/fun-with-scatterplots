@@ -225,7 +225,7 @@ export class Scatterplot {
 
 		var html = '';
 		
-		if ("key" in this) {
+		if (this.key != null) {	
 
 			console.log(this.key)
 
@@ -245,7 +245,7 @@ export class Scatterplot {
 			for (var i = 0; i < categories.length; i++) {
 
 
-				colorDomain.push(categories[i])
+				colourDomain.push(categories[i])
 				colourRange.push(self.colours[i])
 				
 				html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keyCircle" style="background: ' + self.colours[i] + '"></span>';
@@ -379,6 +379,13 @@ export class Scatterplot {
 		// y-axis
 		svg.append("g")
 			.attr("class", "y axis")
+			.attr("transform", function() {
+
+				if (self.y_axis_cross_x != null) {
+					return "translate(" + x(self.y_axis_cross_x) + ",0)"
+				}
+
+			})
 			.call(yAxis)
 			.append("text")
 			.attr("class", "label")
@@ -477,7 +484,8 @@ export class Scatterplot {
 
 				}
 
-				var x1 = parseFloat(trendline[0].min_x)
+				console.log(trendline)
+				var x1 = parseFloat(trendline[0].min_x)	
 				var y1 = parseFloat(trendline[0].min_y)
 				var x2 = parseFloat(trendline[0].max_x)
 				var y2 = parseFloat(trendline[0].max_y)

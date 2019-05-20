@@ -31,7 +31,7 @@ window.init = function init(el, config) {
     // var y = (params.y) ? params.y : 'religious_persons_percent' ;
 
 	reqwest({
-	  url: 'https://interactive.guim.co.uk/docsdata-test/' + ssKey + '.json', //https://interactive.guim.co.uk/docsdata/1uQioCaW7on919nLfs7T7Fpiy3tygPmwHfO5Y-H42zxU.json
+	  url: 'https://interactive.guim.co.uk/docsdata/' + ssKey + '.json', //https://interactive.guim.co.uk/docsdata/1uQioCaW7on919nLfs7T7Fpiy3tygPmwHfO5Y-H42zxU.json
 	  type: 'json',
 	  crossOrigin: true,
 	  success: (resp) =>  { 
