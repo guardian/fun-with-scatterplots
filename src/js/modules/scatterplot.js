@@ -24,6 +24,8 @@ export class Scatterplot {
 
 		this.tiptext =  null
 
+		// this.margin =  null
+
 		this.target = null
 
 		this.filter =  null
@@ -42,7 +44,16 @@ export class Scatterplot {
 
 		this.y_label = null
 
-		this.colours = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6']
+		this.colours = ["#ffd700",
+"#ffb14e",
+"#fa8775",
+"#ea5f94",
+"#cd34b5",
+"#9d02d7",
+"#0000ff",
+"#000000"]
+
+		this.fill = ["","","#circles-1","#circles-1","","","","",""]
 
 		this.categories =  null
 		
@@ -120,6 +131,13 @@ export class Scatterplot {
 		if (this.settings[0]["x_format"]!='') {
 			this.x_format = this.settings[0]["x_format"]
 		}
+
+		// if ("margin" in this.settings[0]) {
+		// 		if (this.settings[0]["margin"]!='') {
+		// 		this.margin = this.settings[0]["margin"]
+		// 	}
+		// }
+		
 
 		if (this.settings[0].trendline=='TRUE') {
 
@@ -233,6 +251,7 @@ export class Scatterplot {
 		var categories = [];
 		var colourDomain = []
 		var colourRange = []
+		var fillRange = []
 
 
 		self.database.forEach(function(item) {
@@ -319,7 +338,7 @@ export class Scatterplot {
 		var width = document.querySelector("#graphicContainer").getBoundingClientRect().width;
 		var height = (isMobile) ? width*0.7 : width*0.5;		
 
-		var margin = {top: 20, right: 20, bottom: 35, left: 30},
+		var margin = {top: 20, right: 20, bottom: 35, left: 45},
 		width = width - margin.left - margin.right,
 	    height = height - margin.top - margin.bottom;
 
