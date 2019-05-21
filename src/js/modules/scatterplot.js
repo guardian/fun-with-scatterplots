@@ -59,9 +59,15 @@ export class Scatterplot {
 		this.yTag = data.sheets.settings[0].y;
 		this.xTag = data.sheets.settings[0].x;
 
+
+		this.zero_line_x = (data.sheets.settings[0].zero_line_x==='TRUE') ? true : false ;
+		this.zero_line_y = (data.sheets.settings[0].zero_line_y==='TRUE') ? true : false ;
+
+
 		this.database = data.sheets.database;
 
 		this.database.forEach(function(d,i) {
+
 			d.x = +d[data.sheets.settings[0].x];
 			d.y = +d[data.sheets.settings[0].y];
 			
@@ -169,9 +175,19 @@ export class Scatterplot {
 		}
 
 
+		this.hasAnnotations =  (data.sheets.labels.length > 0) ? true : false ;
+
+		if (this.hasAnnotations) {
+
+			this.annotations = data.sheets.labels
+
+		}
+
 		d3.select("#scatterplot_chart_data_source").html(self.settings[0].source);
 
 		this.render()
+
+		this.resizer()
 	}
 
 	createFilters() {
@@ -272,6 +288,26 @@ export class Scatterplot {
 
 	}
 
+	resizer() {
+
+		var self = this
+
+        window.addEventListener("resize", function() {
+
+            clearTimeout(document.body.data)
+
+            document.body.data = setTimeout( function() { 
+
+            	console.log("Resize the chart")
+
+            	self.render()
+
+            }, 800);
+
+        });
+
+	}
+
 	render() {
 
 		var self = this
@@ -308,7 +344,6 @@ export class Scatterplot {
 			xAxis.tickFormat(d3.format(self.x_format));
 		}
 		
-		    
 		// setup y
 		var yValue = function(d) { return d.y;}, // data -> value
 		    y = d3.scaleLinear().range([height, 0]), // value -> display
@@ -318,8 +353,13 @@ export class Scatterplot {
 		var svg = d3.select("#graphicContainer").append("svg")
 			.attr("width", width + margin.left + margin.right)
 			.attr("height", height + margin.top + margin.bottom)
+            .attr("preserveAspectRatio", "xMinYMin meet")
+            .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+            .classed("svg-content", true)
 			.append("g")
-			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+
 
 		// Get the values for the X Axis using all the values from the database (This means you can flip between categories and compare values on the same axis)
 		var xRange = self.database.map(function (d) { return parseFloat(d.x); });
@@ -397,7 +437,6 @@ export class Scatterplot {
 
 		// draw dots
 
-
 			svg.selectAll(".dot-label")
 			.data(self.labels)
 			.enter().append("text")
@@ -407,7 +446,6 @@ export class Scatterplot {
 			.attr("text-anchor", "middle")
 			.attr("y", yMap)
 			.text(function (d) { return d[self.label_col]})
-
 
 		svg.selectAll(".dot")
 		  	.data(self.target)
@@ -451,9 +489,6 @@ export class Scatterplot {
 				}
 
 			})
-
-
-	
 
 		    if (self.filter!=null) {
 				// Handle the filter clicks
@@ -506,20 +541,58 @@ export class Scatterplot {
 					.style("opacity", 1)
 					.style("stroke-dasharray", ("3, 3"))
 
-		    } else {
+		    }
 
-		    	// var lg = self.calcLinear(self.database, "x", "y", d3.min(self.database, function(d){ return d.x}), d3.min(self.database, function(d){ return d.x}));
+		    if (self.zero_line_x) {
 
-			    // svg.append("line")
-			    //     .attr("class", "regression")
-			    //     .attr("x1", x(lg.ptA.x))
-			    //     .attr("y1", y(lg.ptA.y))
-			    //     .attr("x2", x(lg.ptB.x))
-			    //     .attr("y2", y(lg.ptB.y));
-
+				svg.append("line")
+				.attr("class", "zeroline")
+				.attr("x1", function(d) { return x(0); })
+				.attr("y1", function(d) { return 0; }) //y(yMax)
+				.attr("x2", function(d) { return x(0); })
+				.attr("y2", function(d) { return height; }) //y(yMin)
+				.attr("stroke", "lightgrey")
+				.attr("stroke-width", 1)
+				.style("opacity", 1)
 
 		    }
 
+		    if (self.zero_line_y) {
+
+				svg.append("line")
+				.attr("class", "zeroline")
+				.attr("x1", function(d) { return 0; })
+				.attr("y1", function(d) { return y(0); }) //y(yMax)
+				.attr("x2", function(d) { return width; })
+				.attr("y2", function(d) { return y(0) }) //y(yMin)
+				.attr("stroke", "lightgrey")
+				.attr("stroke-width", 1)
+				.style("opacity", 1)
+
+		    }
+
+		    if (self.hasAnnotations) {
+
+		    	for (var i = 0; i < self.annotations.length; i++) {
+
+					svg.append("text")
+						.attr("class", "annotations")
+						.attr("x", function(d) { 
+							let scaled_x = (self.annotations[i].scaled_x==='TRUE') ? true : false ;
+							let position = (scaled_x) ? x(+self.annotations[i].x) : +self.annotations[i].x ;
+							return position
+						})
+						.attr("y", function(d) { 
+							let scaled_y = (self.annotations[i].scaled_y==='TRUE') ? true : false ;
+							let position = (scaled_y) ? y(+self.annotations[i].y) : +self.annotations[i].y ;
+							return position
+						})
+						.style("text-anchor", self.annotations[i]["text-anchor"])
+						.text(self.annotations[i].text);
+
+		    	}
+
+		    }
 
 	}
 

@@ -24,7 +24,7 @@ window.init = function init(el, config) {
         
     });
 
-    var ssKey = (params.key) ? params.key : '1fF-BncFYQd261yn2GI_nBAaYFvWUt7-Jow6ZwgjCS3g' ;
+    var ssKey = (params.key) ? params.key : '1AsgU8YQCKI6DuzJ8Y1qh4-Y7YRuFZZQr8K-4gmbtffU' ;
 
     // var x = (params.x) ? params.x : 'yes' ;
 

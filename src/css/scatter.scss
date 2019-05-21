@@ -139,10 +139,7 @@ html {
     font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
   }
 
-  #graphicContainer {
-    position:relative;
-    margin-bottom:10px;
-  }
+
 
   .center {
   margin-right: auto;
@@ -314,6 +311,28 @@ html {
   }
 
 }
+
+#graphicContainer {
+  position:relative;
+  margin-bottom:10px;
+}
+
+/*
+#graphicContainer {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.svg-content {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+*/
+
 
   #outer-wrapper {
     position: relative;
