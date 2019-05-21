@@ -42,7 +42,7 @@ export class Scatterplot {
 
 		this.y_label = null
 
-		this.colours = ["#197caa", "#4bc6df", "#7d0068", "#dc2a7d", "#b51800", "#4e0375", "#e6711b", "#72af7e", "#298422"]
+		this.colours = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6']
 
 		this.categories =  null
 		
