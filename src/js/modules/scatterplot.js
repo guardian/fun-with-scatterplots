@@ -53,6 +53,14 @@ export class Scatterplot {
 						"#0000ff",
 						"#000000"]
 
+		this.symbolTypes = ['symbolCircle', 
+							'symbolCross', 
+							'symbolDiamond', 
+							'symbolSquare', 
+							'symbolStar', 
+							'symbolTriangle', 
+							'symbolWye'];
+
 		this.fill = ["","","#circles-1","#circles-1","","","","",""]
 
 		this.categories =  null
@@ -132,13 +140,6 @@ export class Scatterplot {
 			this.x_format = this.settings[0]["x_format"]
 		}
 
-		// if ("margin" in this.settings[0]) {
-		// 		if (this.settings[0]["margin"]!='') {
-		// 		this.margin = this.settings[0]["margin"]
-		// 	}
-		// }
-		
-
 		if (this.settings[0].trendline=='TRUE') {
 
 			this.trendline = true;
@@ -161,8 +162,6 @@ export class Scatterplot {
 		}
 
 		// Create the category selectors if they have been set in the Googledoc
-		
-
 
 		if (this.settings[0].x_axis_cross_y != '') {
 			this.x_axis_cross_y = this.settings[0].x_axis_cross_y
@@ -201,9 +200,17 @@ export class Scatterplot {
 
 		}
 
+		this.colourBlindUser = false
+
 		d3.select("#scatterplot_chart_data_source").html(self.settings[0].source);
 
 		this.render()
+
+		d3.selectAll("#colourBlind").on("click", function() {
+			self.colourBlindUser = (self.colourBlindUser) ? false : true ;
+			d3.select("#key").classed("colourvision", !d3.select("#key").classed("colourvision"))
+			self.render()
+		});
 
 		this.resizer()
 	}
@@ -246,32 +253,21 @@ export class Scatterplot {
 
 		self.cats = self.settings[0].categories;
 
-		self.categories = [];
-
-		var categories = [];
+		var categories = []
 		var colourDomain = []
 		var colourRange = []
 		var fillRange = []
 
+		self.database.forEach( (item) => categories.indexOf(item[self.cats]) === -1 ? categories.push(item[self.cats]) : '')
 
-		self.database.forEach(function(item) {
+		while (self.symbolTypes.length < categories.length) {
 
-			categories.indexOf(item[self.cats]) === -1 ? categories.push(item[self.cats]) : '';
-
-		})
-
-		console.log("Categories ====================>")
-		console.log(categories)
+			self.symbolTypes = [...self.symbolTypes,...self.symbolTypes]
+		}
 
 		var symbolGenerator = d3.symbol().size(100);
 
-		var symbolTypes = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye', 'symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'];
-
-		var syms = categories.map( (item, index) => {
-
-			return [ item , symbolTypes[index] ]
-
-		})
+		var syms = categories.map( (item, index) => [ item , self.symbolTypes[index] ])
 
 		var symap = new Map(syms)
 
@@ -299,26 +295,35 @@ export class Scatterplot {
 
 		else {
 
+			html += `<div class="colour_blind_key">`
+
 			for (var i = 0; i < categories.length; i++) {
 
 				colourDomain.push(categories[i])
 				colourRange.push(self.colours[i])
-				
+
 				html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keySymbol"><svg width="12" height="12" viewBox="-6 -6 12 12"><path d="' + self.symbolKey(categories[i]) + '" fill="' + self.colours[i] + '" /></svg></span>';
 				html += ' <span class="keyText">' + categories[i] + '</span></div>';
 
+			}
+
+			html += `</div><div class="colour_vision_key">`
+
+
+			for (var i = 0; i < categories.length; i++) {
+
+				html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keyCircle" style="background: ' + self.colours[i] + '"></span>';
+				html += ' <span class="keyText">' + categories[i] + '</span></div>';
 
 			}
+
+			html += `</div>`
+
 		
 			this.colourKey
 				.domain(colourDomain)
     			.range(colourRange)
 		}
-
-
-
-		
-		//console.log("self categories", this.colourKey.domain())
 
 		d3.select('#key').html(html);
 
@@ -404,7 +409,6 @@ export class Scatterplot {
 			.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
 
-
 		// Get the values for the X Axis using all the values from the database (This means you can flip between categories and compare values on the same axis)
 		var xRange = self.database.map(function (d) { return parseFloat(d.x); });
 		
@@ -479,8 +483,6 @@ export class Scatterplot {
 			.style("text-anchor", "end")
 			.text(self.y_label);
 
-		// draw dots
-
 			svg.selectAll(".dot-label")
 			.data(self.labels)
 			.enter().append("text")
@@ -492,96 +494,102 @@ export class Scatterplot {
 			.text(function (d) { return d[self.label_col]})
 
 
-			svg.selectAll(".dot")
-				.data(self.target)
-				.enter()
-				.append('path')
-				.attr("class", function(d) { return "dot " + d[self.cats]})
-				.attr('transform', function(d, i) {
-					return `translate(${x(d.x)},${y(d.y)})`;
-				})
-				.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
-				.attr('d', function(d) {
-					return self.symbolKey(d[self.cats]);
-				})
-				.on("mouseover", function(d) {
+			if (self.colourBlindUser) {
 
-					if (self.tiptext!=null) {
-						tooltip.transition()
-							.duration(200)
-						   	.style("opacity", .9);
+				svg.selectAll(".dot")
+					.data(self.target)
+					.enter()
+					.append('path')
+					.attr("class", function(d) { return "dot " + d[self.cats]})
+					.attr('transform', function(d, i) {
+						return `translate(${x(d.x)},${y(d.y)})`;
+					})
+					.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
+					.attr('d', function(d) {
+						return self.symbolKey(d[self.cats]);
+					})
+					.on("mouseover", function(d) {
 
-						tooltip.html( self.tipster(d) )
-						   .style("left",  self.tooltip(d3.event.pageX, width) + "px")
-						   .style("top", ((isMobile) ? height / 2 : d3.event.pageY + 10) + "px")
-					}
+						if (self.tiptext!=null) {
+							tooltip.transition()
+								.duration(200)
+							   	.style("opacity", .9);
 
-				})
-				.on("mouseout", function(d) {
+							tooltip.html( self.tipster(d) )
+							   .style("left",  self.tooltip(d3.event.pageX, width) + "px")
+							   .style("top", ((isMobile) ? height / 2 : d3.event.pageY + 10) + "px")
+						}
 
-					if (self.tiptext!=null) {
-					  tooltip.transition()
-					       .duration(500)
-					       .style("opacity", 0);
-					}
+					})
+					.on("mouseout", function(d) {
 
-				})
+						if (self.tiptext!=null) {
+						  tooltip.transition()
+						       .duration(500)
+						       .style("opacity", 0);
+						}
 
+					})
 
-			/*
-			svg.selectAll(".dot")
-			  	.data(self.target)
-				.enter().append("circle")
-				.attr("class", function(d) { return "dot " + d[self.cats]})
-				.attr("r", 3.5)
-				.attr("cx", xMap)
-				.attr("cy", yMap)
-				.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
-				.attr("stroke", function(d) { 
-					// if (d.label != '') {
-					// 	return "#000" 
-					// }
-					
-				})
-				.attr("stroke-width", function(d) { 
-					if (d.label != '') {
-						return "1px"
-					}
-					
-				})
-				.on("mouseover", function(d) {
+			} else {
 
-					if (self.tiptext!=null) {
-						tooltip.transition()
-							.duration(200)
-						   	.style("opacity", .9);
+				svg.selectAll(".dot")
+				  	.data(self.target)
+					.enter().append("circle")
+					.attr("class", function(d) { return "dot " + d[self.cats]})
+					.attr("r", 3.5)
+					.attr("cx", xMap)
+					.attr("cy", yMap)
+					.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
+					.attr("stroke", function(d) { 
+						// if (d.label != '') {
+						// 	return "#000" 
+						// }
+						
+					})
+					.attr("stroke-width", function(d) { 
+						if (d.label != '') {
+							return "1px"
+						}
+						
+					})
+					.on("mouseover", function(d) {
 
-						tooltip.html( self.tipster(d) )
-						   .style("left",  self.tooltip(d3.event.pageX, width) + "px")
-						   .style("top", ((isMobile) ? height / 2 : d3.event.pageY + 10) + "px")
-					}
+						if (self.tiptext!=null) {
+							tooltip.transition()
+								.duration(200)
+							   	.style("opacity", .9);
 
-				})
-				.on("mouseout", function(d) {
+							tooltip.html( self.tipster(d) )
+							   .style("left",  self.tooltip(d3.event.pageX, width) + "px")
+							   .style("top", ((isMobile) ? height / 2 : d3.event.pageY + 10) + "px")
+						}
 
-					if (self.tiptext!=null) {
-					  tooltip.transition()
-					       .duration(500)
-					       .style("opacity", 0);
-					}
+					})
+					.on("mouseout", function(d) {
 
-				})
-				*/
+						if (self.tiptext!=null) {
+						  tooltip.transition()
+						       .duration(500)
+						       .style("opacity", 0);
+						}
 
+					})
+
+			}
 
 		    if (self.filter!=null) {
-				// Handle the filter clicks
+
 				d3.selectAll(".filter").on("click", self.filters);
+
 		    }
 
 		    if (self.cats!=null) {
-				// Handle catgeoriy switch
-				d3.selectAll(".keySymbol").on("click", self.stated);
+
+		    	var user = (self.colourBlindUser) ? ".keySymbol" : ".keyCircle" ;
+				
+		    	d3.selectAll(user).on("click", self.stated);
+				
 		    }
 
 		    // Add the trendline if it has been specified
@@ -815,14 +823,15 @@ export class Scatterplot {
 
 		(alreadyIsActive) ? trendline.style('opacity', 0.7) : trendline.style('opacity', 0) ;
 
-		/*
-		self.categories.filter(function(value) {
-			if (value.name == cat) {
-				value.status = alreadyIsActive
-			}
-		})
-		*/
+		if (self.categories!=undefined) {
 
+			self.categories.filter(function(value) {
+				if (value.name == cat) {
+					value.status = alreadyIsActive
+				}
+			})
+
+		}
 	}
 
 	filters() {
@@ -840,27 +849,9 @@ export class Scatterplot {
 	}
 
 	colorize(state) {
-		var self = this
 
-		var target = self.categories.filter(function(value){
-			return value.name == state
-		})
-
-		return target[0].colour
+		return this.categories.filter((value) => value.name == state)[0].colour
 	
 	}
-
-	// opacitize(state) {
-
-	// 	var self = this
-
-	// 	var target = self.categories.filter(function(value){
-	// 		return value.name == state
-	// 	})
-
-	// 	return (target[0].status) ? 'block' : 'none'
-
-	// }
-
 
 }
