@@ -45,13 +45,13 @@ export class Scatterplot {
 		this.y_label = null
 
 		this.colours = ["#ffd700",
-"#ffb14e",
-"#fa8775",
-"#ea5f94",
-"#cd34b5",
-"#9d02d7",
-"#0000ff",
-"#000000"]
+						"#ffb14e",
+						"#fa8775",
+						"#ea5f94",
+						"#cd34b5",
+						"#9d02d7",
+						"#0000ff",
+						"#000000"]
 
 		this.fill = ["","","#circles-1","#circles-1","","","","",""]
 
@@ -255,14 +255,36 @@ export class Scatterplot {
 
 
 		self.database.forEach(function(item) {
+
 			categories.indexOf(item[self.cats]) === -1 ? categories.push(item[self.cats]) : '';
+
 		})
+
+		console.log("Categories ====================>")
+		console.log(categories)
+
+		var symbolGenerator = d3.symbol().size(100);
+
+		var symbolTypes = ['symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye', 'symbolCircle', 'symbolCross', 'symbolDiamond', 'symbolSquare', 'symbolStar', 'symbolTriangle', 'symbolWye'];
+
+		var syms = categories.map( (item, index) => {
+
+			return [ item , symbolTypes[index] ]
+
+		})
+
+		var symap = new Map(syms)
+
+		this.symbolKey = (cat) => {
+
+			symbolGenerator.type(d3[symap.get(cat)]);
+
+			return symbolGenerator();
+		}
 
 		var html = '';
 		
 		if (this.key != null) {	
-
-			console.log(this.key)
 
 			if (this.key[0].key != '') {
 				
@@ -279,12 +301,12 @@ export class Scatterplot {
 
 			for (var i = 0; i < categories.length; i++) {
 
-
 				colourDomain.push(categories[i])
 				colourRange.push(self.colours[i])
 				
-				html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keyCircle" style="background: ' + self.colours[i] + '"></span>';
+				html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keySymbol"><svg width="12" height="12" viewBox="-6 -6 12 12"><path d="' + self.symbolKey(categories[i]) + '" fill="' + self.colours[i] + '" /></svg></span>';
 				html += ' <span class="keyText">' + categories[i] + '</span></div>';
+
 
 			}
 		
@@ -293,8 +315,11 @@ export class Scatterplot {
     			.range(colourRange)
 		}
 
+
+
 		
-		console.log("self categories", this.colourKey.domain())
+		//console.log("self categories", this.colourKey.domain())
+
 		d3.select('#key').html(html);
 
 	}
@@ -466,48 +491,88 @@ export class Scatterplot {
 			.attr("y", yMap)
 			.text(function (d) { return d[self.label_col]})
 
-		svg.selectAll(".dot")
-		  	.data(self.target)
-			.enter().append("circle")
-			.attr("class", function(d) { return "dot " + d[self.cats]})
-			.attr("r", 3.5)
-			.attr("cx", xMap)
-			.attr("cy", yMap)
-			.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
-			.attr("stroke", function(d) { 
-				// if (d.label != '') {
-				// 	return "#000" 
-				// }
-				
-			})
-			.attr("stroke-width", function(d) { 
-				if (d.label != '') {
-					return "1px"
-				}
-				
-			})
-			.on("mouseover", function(d) {
 
-				if (self.tiptext!=null) {
-					tooltip.transition()
-						.duration(200)
-					   	.style("opacity", .9);
+			svg.selectAll(".dot")
+				.data(self.target)
+				.enter()
+				.append('path')
+				.attr("class", function(d) { return "dot " + d[self.cats]})
+				.attr('transform', function(d, i) {
+					return `translate(${x(d.x)},${y(d.y)})`;
+				})
+				.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
+				.attr('d', function(d) {
+					return self.symbolKey(d[self.cats]);
+				})
+				.on("mouseover", function(d) {
 
-					tooltip.html( self.tipster(d) )
-					   .style("left",  self.tooltip(d3.event.pageX, width) + "px")
-					   .style("top", ((isMobile) ? height / 2 : d3.event.pageY + 10) + "px")
-				}
+					if (self.tiptext!=null) {
+						tooltip.transition()
+							.duration(200)
+						   	.style("opacity", .9);
 
-			})
-			.on("mouseout", function(d) {
+						tooltip.html( self.tipster(d) )
+						   .style("left",  self.tooltip(d3.event.pageX, width) + "px")
+						   .style("top", ((isMobile) ? height / 2 : d3.event.pageY + 10) + "px")
+					}
 
-				if (self.tiptext!=null) {
-				  tooltip.transition()
-				       .duration(500)
-				       .style("opacity", 0);
-				}
+				})
+				.on("mouseout", function(d) {
 
-			})
+					if (self.tiptext!=null) {
+					  tooltip.transition()
+					       .duration(500)
+					       .style("opacity", 0);
+					}
+
+				})
+
+
+			/*
+			svg.selectAll(".dot")
+			  	.data(self.target)
+				.enter().append("circle")
+				.attr("class", function(d) { return "dot " + d[self.cats]})
+				.attr("r", 3.5)
+				.attr("cx", xMap)
+				.attr("cy", yMap)
+				.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
+				.attr("stroke", function(d) { 
+					// if (d.label != '') {
+					// 	return "#000" 
+					// }
+					
+				})
+				.attr("stroke-width", function(d) { 
+					if (d.label != '') {
+						return "1px"
+					}
+					
+				})
+				.on("mouseover", function(d) {
+
+					if (self.tiptext!=null) {
+						tooltip.transition()
+							.duration(200)
+						   	.style("opacity", .9);
+
+						tooltip.html( self.tipster(d) )
+						   .style("left",  self.tooltip(d3.event.pageX, width) + "px")
+						   .style("top", ((isMobile) ? height / 2 : d3.event.pageY + 10) + "px")
+					}
+
+				})
+				.on("mouseout", function(d) {
+
+					if (self.tiptext!=null) {
+					  tooltip.transition()
+					       .duration(500)
+					       .style("opacity", 0);
+					}
+
+				})
+				*/
+
 
 		    if (self.filter!=null) {
 				// Handle the filter clicks
@@ -516,7 +581,7 @@ export class Scatterplot {
 
 		    if (self.cats!=null) {
 				// Handle catgeoriy switch
-				d3.selectAll(".keyCircle").on("click", self.stated);
+				d3.selectAll(".keySymbol").on("click", self.stated);
 		    }
 
 		    // Add the trendline if it has been specified
@@ -750,11 +815,13 @@ export class Scatterplot {
 
 		(alreadyIsActive) ? trendline.style('opacity', 0.7) : trendline.style('opacity', 0) ;
 
+		/*
 		self.categories.filter(function(value) {
 			if (value.name == cat) {
 				value.status = alreadyIsActive
 			}
 		})
+		*/
 
 	}
 
