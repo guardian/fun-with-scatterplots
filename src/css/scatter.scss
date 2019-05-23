@@ -139,8 +139,6 @@ html {
     font-family:'Guardian Text Sans Web', 'Agate Sans', sans-serif;
   }
 
-
-
   .center {
   margin-right: auto;
   margin-left: auto;
@@ -282,17 +280,18 @@ html {
   }
 
   .keySymbol{
-    width:20px;
-    height:20px;
-    margin-bottom: 5px;
+    width:12px;
+    height:12px;
+/*    margin-bottom: 5px;*/
+    display: inline-block;
   }
 
-  .keySymbol {
+/*  .keySymbol {
     display: flex;
     align-items: center;
     justify-content: center;
 
-  }
+  }*/
 
   .keyText {
 
@@ -354,19 +353,23 @@ html {
 #key {
   display: inline-block;
   margin-right: 20px;
-  min-height: 60px;
+  margin-bottom: 5px;
+ /* min-height: 60px;*/
 }
 
 #colourBlind {
   width: 100px;
-  height: 30px;
+  height: 23px;
   border-radius: 15px;
-  line-height: 30px;
-  color: white;
+  line-height: 22px;
   cursor: pointer;
-  float: right;
+  display: inline-block;
   background-color: darkgrey;
   text-align: center;
+}
+
+#colourBlind.chartNotes {
+  color: white;
 }
 
 #key .colour_vision_key {

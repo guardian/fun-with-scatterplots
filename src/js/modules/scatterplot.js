@@ -44,24 +44,25 @@ export class Scatterplot {
 
 		this.y_label = null
 
-		this.colours = ["#ffd700",
-						"#ffb14e",
-						"#fa8775",
-						"#ea5f94",
-						"#cd34b5",
-						"#9d02d7",
-						"#0000ff",
-						"#000000"]
+		this.colours = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6']
 
-		this.symbolTypes = ['symbolCircle', 
-							'symbolCross', 
+		this.greyScale = ["#bdbdbd","#bdbdbd","#bdbdbd","#bdbdbd","#bdbdbd","#bdbdbd","#bdbdbd","#FFFFFF","#FFFFFF","#FFFFFF","#FFFFFF","#FFFFFF","#FFFFFF","#FFFFFF"]
+
+		this.symbolTypes = ['symbolCircle',
+							'symbolCross',
 							'symbolDiamond', 
 							'symbolSquare', 
-							'symbolStar', 
+							'symbolStar',  
 							'symbolTriangle', 
-							'symbolWye'];
-
-		this.fill = ["","","#circles-1","#circles-1","","","","",""]
+							'symbolWye',
+							'symbolCircle',
+							'symbolCross',
+							'symbolDiamond', 
+							'symbolSquare', 
+							'symbolStar',  
+							'symbolTriangle', 
+							'symbolWye'
+							];
 
 		this.categories =  null
 		
@@ -108,6 +109,7 @@ export class Scatterplot {
 		}
 
 		this.colourKey = d3.scaleOrdinal();
+		this.greyKey = d3.scaleOrdinal();
 
 		if ("key" in data.sheets) {
 			this.key = data.sheets.key
@@ -265,7 +267,7 @@ export class Scatterplot {
 			self.symbolTypes = [...self.symbolTypes,...self.symbolTypes]
 		}
 
-		var symbolGenerator = d3.symbol().size(100);
+		var symbolGenerator = d3.symbol().size(50);
 
 		var syms = categories.map( (item, index) => [ item , self.symbolTypes[index] ])
 
@@ -284,7 +286,8 @@ export class Scatterplot {
 
 			if (this.key[0].key != '') {
 				
-				this.key.forEach(function(d) {
+				this.key.forEach(function(d, i) {
+					
 					html += '<div class="keyDiv"><span data-cat="' + d.key + '" class="keyCircle" style="background: ' + d.colour + '"></span>';
 					html += ' <span class="keyText">' + d.key  + '</span></div>';
 				})
@@ -295,14 +298,30 @@ export class Scatterplot {
 
 		else {
 
-			html += `<div class="colour_blind_key">`
-
 			for (var i = 0; i < categories.length; i++) {
 
 				colourDomain.push(categories[i])
 				colourRange.push(self.colours[i])
 
-				html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keySymbol"><svg width="12" height="12" viewBox="-6 -6 12 12"><path d="' + self.symbolKey(categories[i]) + '" fill="' + self.colours[i] + '" /></svg></span>';
+			}
+
+			this.colourKey
+				.domain(colourDomain)
+    			.range(colourRange)
+
+    		this.greyKey
+    			.domain(colourDomain)
+    			.range(this.greyScale)	
+
+
+			html += `<div class="colour_blind_key">`
+
+			for (var i = 0; i < categories.length; i++) {
+
+				// colourDomain.push(categories[i])
+				// colourRange.push(self.colours[i])
+
+				html += '<div class="keyDiv"><span data-cat="' + categories[i] + '" class="keySymbol"><svg width="12" height="12" viewBox="-6 -6 12 12"><path d="' + self.symbolKey(categories[i]) + '" stroke="#000" stroke-width="1px" fill="' + this.greyKey(categories[i]) + '" /></svg></span>';
 				html += ' <span class="keyText">' + categories[i] + '</span></div>';
 
 			}
@@ -320,9 +339,7 @@ export class Scatterplot {
 			html += `</div>`
 
 		
-			this.colourKey
-				.domain(colourDomain)
-    			.range(colourRange)
+			
 		}
 
 		d3.select('#key').html(html);
@@ -501,11 +518,16 @@ export class Scatterplot {
 					.enter()
 					.append('path')
 					.attr("class", function(d) { return "dot " + d[self.cats]})
+					.attr("stroke", "#000")
+					.attr("stroke-width", "1px")
 					.attr('transform', function(d, i) {
 						return `translate(${x(d.x)},${y(d.y)})`;
 					})
-					.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
-					.attr('d', function(d) {
+					.style("fill", function(d,i) { 
+						return self.greyKey(d[self.cats]);
+						// return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) 
+					})
+					.attr('d', function(d,i) {
 						return self.symbolKey(d[self.cats]);
 					})
 					.on("mouseover", function(d) {
