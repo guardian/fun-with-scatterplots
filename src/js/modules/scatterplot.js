@@ -500,6 +500,34 @@ export class Scatterplot {
 			.style("text-anchor", "end")
 			.text(self.y_label);
 
+			 if (self.zero_line_x) {
+
+				svg.append("line")
+				.attr("class", "zeroline")
+				.attr("x1", function(d) { return x(0); })
+				.attr("y1", function(d) { return 0; }) //y(yMax)
+				.attr("x2", function(d) { return x(0); })
+				.attr("y2", function(d) { return height; }) //y(yMin)
+				.attr("stroke", "lightgrey")
+				.attr("stroke-width", 1)
+				.style("opacity", 1)
+
+		    }
+
+		    if (self.zero_line_y) {
+
+				svg.append("line")
+				.attr("class", "zeroline")
+				.attr("x1", function(d) { return 0; })
+				.attr("y1", function(d) { return y(0); }) //y(yMax)
+				.attr("x2", function(d) { return width; })
+				.attr("y2", function(d) { return y(0) }) //y(yMin)
+				.attr("stroke", "lightgrey")
+				.attr("stroke-width", 1)
+				.style("opacity", 1)
+
+		    }
+
 			svg.selectAll(".dot-label")
 			.data(self.labels)
 			.enter().append("text")
@@ -523,6 +551,7 @@ export class Scatterplot {
 					.attr('transform', function(d, i) {
 						return `translate(${x(d.x)},${y(d.y)})`;
 					})
+					.style("opacity", 0.8)
 					.style("fill", function(d,i) { 
 						return self.greyKey(d[self.cats]);
 						// return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) 
@@ -564,16 +593,22 @@ export class Scatterplot {
 					.attr("cy", yMap)
 					.style("fill", function(d) { return (self.cats==null) ? '#4bc6df' : self.colourKey(d[self.cats]) })
 					.attr("stroke", function(d) { 
-						// if (d.label != '') {
-						// 	return "#000" 
-						// }
+
+						if (d.label != '') {
+							return "#000"
+						}
+
+						else {
+							return "#bdbdbd"
+						}
+						
 						
 					})
 					.attr("stroke-width", function(d) { 
-						if (d.label != '') {
-							return "1px"
-						}
-						
+						// if (d.label != '') {
+						// 	return "1px"
+						// }
+						return "1px"
 					})
 					.on("mouseover", function(d) {
 
@@ -657,33 +692,7 @@ export class Scatterplot {
 
 		    }
 
-		    if (self.zero_line_x) {
-
-				svg.append("line")
-				.attr("class", "zeroline")
-				.attr("x1", function(d) { return x(0); })
-				.attr("y1", function(d) { return 0; }) //y(yMax)
-				.attr("x2", function(d) { return x(0); })
-				.attr("y2", function(d) { return height; }) //y(yMin)
-				.attr("stroke", "lightgrey")
-				.attr("stroke-width", 1)
-				.style("opacity", 1)
-
-		    }
-
-		    if (self.zero_line_y) {
-
-				svg.append("line")
-				.attr("class", "zeroline")
-				.attr("x1", function(d) { return 0; })
-				.attr("y1", function(d) { return y(0); }) //y(yMax)
-				.attr("x2", function(d) { return width; })
-				.attr("y2", function(d) { return y(0) }) //y(yMin)
-				.attr("stroke", "lightgrey")
-				.attr("stroke-width", 1)
-				.style("opacity", 1)
-
-		    }
+		   
 
 		    if (self.hasAnnotations) {
 
