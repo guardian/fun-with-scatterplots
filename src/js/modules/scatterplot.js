@@ -210,6 +210,13 @@ export class Scatterplot {
 
 		d3.selectAll("#colourBlind").on("click", function() {
 			self.colourBlindUser = (self.colourBlindUser) ? false : true ;
+			if (self.colourBlindUser) {
+				d3.select("#colourBlind").text("colour")
+			}
+
+			else {
+				d3.select("#colourBlind").text("greyscale")
+			}
 			d3.select("#key").classed("colourvision", !d3.select("#key").classed("colourvision"))
 			self.render()
 		});
